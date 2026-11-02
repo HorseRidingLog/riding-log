@@ -210,6 +210,7 @@ footer.note{ margin-top:32px; color:var(--muted); font-size:.8rem; }
           <h2 style="margin:0">集計</h2>
           <span class="spacer"></span>
           <select id="period" aria-label="期間"></select>
+          <select id="sumLesson" aria-label="レッスン"></select>
           <select id="sortHorses" aria-label="並び順">
             <option value="count">回数が多い順</option>
             <option value="recent">最近乗った順</option>
@@ -218,6 +219,7 @@ footer.note{ margin-top:32px; color:var(--muted); font-size:.8rem; }
         </div>
         <p class="period-total" id="periodTotal"></p>
         <div id="horses"></div>
+        <div class="matrix" id="lessonMatrix"></div>
         <div class="matrix" id="matrix"></div>
       </section>
     </div>
@@ -290,7 +292,7 @@ footer.note{ margin-top:32px; color:var(--muted); font-size:.8rem; }
 (function(){
   const $ = s => document.querySelector(s);
   const WD = ['日','月','火','水','木','金','土'];
-  const state = { rides:[], mode:'loading', filterHorse:'', filterYear:'', filterLesson:'', period:'', sort:'count', editing:null, horse:null, pending:[] };
+  const state = { rides:[], mode:'loading', filterHorse:'', filterYear:'', filterLesson:'', period:'', sumLesson:'', sort:'count', editing:null, horse:null, pending:[] };
   let backend = null;
 
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -350,7 +352,8 @@ footer.note{ margin-top:32px; color:var(--muted); font-size:.8rem; }
 
   /* ---------- derived ---------- */
   function sorted(arr){ return arr.slice().sort((a,b) => a.date < b.date ? 1 : a.date > b.date ? -1 : (b.createdAt||0) - (a.createdAt||0)); }
-  function periodRides(){ return state.period ? state.rides.filter(r => r.date.slice(0,4) === state.period) : state.rides; }
+  function yearRides(){ return state.period ? state.rides.filter(r => r.date.slice(0,4) === state.period) : state.rides; }
+  function periodRides(){ const y = yearRides(); return state.sumLesson ? y.filter(r => lessonOf(r) === state.sumLesson) : y; }
   function horses(src = state.rides){
     const map = new Map();
     for(const r of src){
@@ -414,12 +417,16 @@ footer.note{ margin-top:32px; color:var(--muted); font-size:.8rem; }
     if(state.period && !years.includes(state.period)) state.period = '';
     $('#period').innerHTML = '<option value="">すべての期間</option>' + years.map(y => `<option value="${y}">${y}年</option>`).join('');
     $('#period').value = state.period;
+    if(state.sumLesson && !ls.includes(state.sumLesson)) state.sumLesson = '';
+    $('#sumLesson').innerHTML = '<option value="">すべてのレッスン</option>' + ls.map(l => `<option value="${esc(l)}">${esc(l)}</option>`).join('');
+    $('#sumLesson').value = state.sumLesson;
     const pr = periodRides(), phs = horses(pr);
     $('#periodTotal').innerHTML = state.mode === 'loading' || !state.rides.length ? '' :
-      `${state.period ? state.period + '年' : 'これまで'}の合計<b>${sum(pr)}</b>回、<b>${phs.length}</b>頭`;
+      `${state.period ? state.period + '年' : 'これまで'}${state.sumLesson ? 'の' + esc(state.sumLesson) : ''}の合計<b>${sum(pr)}</b>回、<b>${phs.length}</b>頭`;
 
     renderLog();
     renderHorses(phs);
+    renderLessonMatrix();
     renderMatrix(phs, pr);
 
     $('#storageNote').textContent =
@@ -464,14 +471,34 @@ footer.note{ margin-top:32px; color:var(--muted); font-size:.8rem; }
       </button>`).join('') + '</div>';
   }
 
+  function renderLessonMatrix(){
+    const el = $('#lessonMatrix');
+    const src = yearRides();
+    if(state.mode === 'loading' || !src.length){ el.innerHTML = ''; return; }
+    const hs = horses(src);
+    const lm = new Map();
+    for(const r of src) lm.set(lessonOf(r), (lm.get(lessonOf(r)) || 0) + cnt(r));
+    const cols = [...lm.entries()].sort((a,b) => b[1] - a[1]).map(e => e[0]);
+    const cell = new Map(); let max = 0;
+    for(const r of src){
+      const k = r.horse + '\u0000' + lessonOf(r);
+      const v = (cell.get(k) || 0) + cnt(r); cell.set(k, v); if(v > max) max = v;
+    }
+    const td = v => v ? `<td style="background:color-mix(in srgb, var(--accent) ${Math.round(10 + 40 * v / max)}%, transparent)">${v}</td>` : '<td></td>';
+    const title = `${state.period ? state.period + '年の' : ''}レッスン別・馬別の回数`;
+    el.innerHTML = `<h3>${title}</h3><div class="mx-scroll"><table class="mx"><thead><tr><th>馬</th>${cols.map(c => `<th>${esc(c)}</th>`).join('')}<th class="tot">合計</th></tr></thead><tbody>` +
+      hs.map(h => `<tr><th>${esc(h.name)}</th>${cols.map(c => td(cell.get(h.name + '\u0000' + c) || 0)).join('')}<td class="tot">${h.count}</td></tr>`).join('') +
+      `</tbody><tfoot><tr><th>レッスン計</th>${cols.map(c => `<td>${lm.get(c)}</td>`).join('')}<td class="tot">${sum(src)}</td></tr></tfoot></table></div>`;
+  }
+
   function renderMatrix(hs, src){
     const el = $('#matrix');
     if(state.mode === 'loading' || !hs.length){ el.innerHTML = ''; return; }
     let cols, keyOf, label, title;
     if(state.period){
-      cols = Array.from({ length:12 }, (_, i) => i + 1); keyOf = r => +r.date.slice(5,7); label = c => c + '月'; title = `${state.period}年の月別回数`;
+      cols = Array.from({ length:12 }, (_, i) => i + 1); keyOf = r => +r.date.slice(5,7); label = c => c + '月'; title = `${state.period}年の${state.sumLesson ? esc(state.sumLesson) + 'の' : ''}月別回数`;
     } else {
-      cols = [...new Set(state.rides.map(r => +r.date.slice(0,4)))].sort((a,b) => a - b); keyOf = r => +r.date.slice(0,4); label = c => c + '年'; title = '年別回数';
+      cols = [...new Set(state.rides.map(r => +r.date.slice(0,4)))].sort((a,b) => a - b); keyOf = r => +r.date.slice(0,4); label = c => c + '年'; title = `${state.sumLesson ? esc(state.sumLesson) + 'の' : ''}年別回数`;
     }
     const cell = new Map(), colTot = new Map();
     let max = 0;
@@ -509,6 +536,7 @@ footer.note{ margin-top:32px; color:var(--muted); font-size:.8rem; }
   $('#filterLesson').addEventListener('change', e => { state.filterLesson = e.target.value; render(); });
   $('#sortHorses').addEventListener('change', e => { state.sort = e.target.value; render(); });
   $('#period').addEventListener('change', e => { state.period = e.target.value; render(); });
+  $('#sumLesson').addEventListener('change', e => { state.sumLesson = e.target.value; render(); });
   function setView(v){
     $('main').dataset.view = v;
     document.querySelectorAll('.tabs button').forEach(b => b.setAttribute('aria-selected', String(b.dataset.view === v)));
