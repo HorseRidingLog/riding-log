@@ -465,7 +465,6 @@ footer.note{ margin-top:32px; color:var(--muted); font-size:.8rem; }
     el.innerHTML = '<div class="horse-list">' + hs.map(h => `<button type="button" class="horse" data-name="${esc(h.name)}" aria-pressed="${state.filterHorse === h.name}">
         <span class="name">${esc(h.name)}</span>
         <span class="num"><b>${h.count}</b><small>回</small></span>
-        <span class="tally">${tallySvg(h.count)}</span>
         ${Object.keys(h.lessons).length > 1 ? `<span class="mix">${Object.entries(h.lessons).sort((a,b)=>b[1]-a[1]).map(([l,n]) => `${esc(l)} ${n}回`).join('　')}</span>` : ''}
         <span class="when">最後に乗った日 ${fmtLong(h.last)}${h.first !== h.last ? `　初めて ${fmtLong(h.first)}` : ''}</span>
       </button>`).join('') + '</div>';
