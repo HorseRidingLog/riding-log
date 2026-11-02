@@ -4,15 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>騎乗記録</title>
-<meta name="theme-color" content="#EDF1F0" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#131A1C" media="(prefers-color-scheme: dark)">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="騎乗記録">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
-<link rel="manifest" href="manifest.webmanifest">
-<link rel="icon" href="icon-192.png" type="image/png">
-<link rel="apple-touch-icon" href="apple-touch-icon.png">
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@600;800&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
@@ -298,21 +290,33 @@ footer.note{ margin-top:32px; color:var(--muted); font-size:.8rem; }
 
   /* ---------- storage ---------- */
   const LKEY = 'riding-log-v1';
+  const SEED = [{"id": "memo01", "kind": "ride", "date": "2026-02-15", "horse": "シエル", "count": 1, "memo": "", "createdAt": 1762000000001}, {"id": "memo02", "kind": "ride", "date": "2026-04-26", "horse": "アルベニス", "count": 1, "memo": "", "createdAt": 1762000000002}, {"id": "memo03", "kind": "ride", "date": "2026-04-29", "horse": "アルベニス", "count": 1, "memo": "", "createdAt": 1762000000003}, {"id": "memo04", "kind": "ride", "date": "2026-07-20", "horse": "アルベニス", "count": 1, "memo": "", "createdAt": 1762000000004}, {"id": "memo05", "kind": "ride", "date": "2026-08-11", "horse": "アルベニス", "count": 1, "memo": "", "createdAt": 1762000000005}, {"id": "memo06", "kind": "ride", "date": "2026-08-15", "horse": "アルベニス", "count": 1, "memo": "", "createdAt": 1762000000006}, {"id": "memo07", "kind": "ride", "date": "2026-05-16", "horse": "ガロア", "count": 1, "memo": "", "createdAt": 1762000000007}, {"id": "memo08", "kind": "ride", "date": "2026-06-14", "horse": "ガロア", "count": 1, "memo": "", "createdAt": 1762000000008}, {"id": "memo09", "kind": "ride", "date": "2026-05-17", "horse": "エルメス", "count": 1, "memo": "", "createdAt": 1762000000009}, {"id": "memo10", "kind": "ride", "date": "2026-05-23", "horse": "エルメス", "count": 1, "memo": "", "createdAt": 1762000000010}, {"id": "memo11", "kind": "ride", "date": "2026-05-31", "horse": "エルメス", "count": 1, "memo": "", "createdAt": 1762000000011}, {"id": "memo12", "kind": "ride", "date": "2026-07-19", "horse": "エルメス", "count": 1, "memo": "", "createdAt": 1762000000012}, {"id": "memo13", "kind": "ride", "date": "2026-07-20", "horse": "エルメス", "count": 1, "memo": "", "createdAt": 1762000000013}, {"id": "memo14", "kind": "ride", "date": "2026-08-01", "horse": "エルメス", "count": 1, "memo": "", "createdAt": 1762000000014}, {"id": "memo15", "kind": "ride", "date": "2026-08-02", "horse": "エルメス", "count": 1, "memo": "", "createdAt": 1762000000015}, {"id": "memo16", "kind": "ride", "date": "2026-08-09", "horse": "エルメス", "count": 1, "memo": "", "createdAt": 1762000000016}, {"id": "memo17", "kind": "ride", "date": "2026-08-17", "horse": "エルメス", "count": 1, "memo": "", "createdAt": 1762000000017}, {"id": "memo18", "kind": "ride", "date": "2026-08-28", "horse": "エルメス", "count": 1, "memo": "", "createdAt": 1762000000018}, {"id": "memo19", "kind": "ride", "date": "2026-09-13", "horse": "エルメス", "count": 1, "memo": "", "createdAt": 1762000000019}, {"id": "memo20", "kind": "ride", "date": "2026-09-19", "horse": "エルメス", "count": 1, "memo": "", "createdAt": 1762000000020}, {"id": "memo21", "kind": "ride", "date": "2026-10-03", "horse": "エルメス", "count": 1, "memo": "", "createdAt": 1762000000021}, {"id": "memo22", "kind": "ride", "date": "2026-10-10", "horse": "エルメス", "count": 1, "memo": "", "createdAt": 1762000000022}, {"id": "memo23", "kind": "ride", "date": "2026-10-12", "horse": "エルメス", "count": 1, "memo": "", "createdAt": 1762000000023}, {"id": "memo24", "kind": "ride", "date": "2026-10-18", "horse": "エルメス", "count": 1, "memo": "", "createdAt": 1762000000024}, {"id": "memo25", "kind": "ride", "date": "2026-10-24", "horse": "エルメス", "count": 1, "memo": "", "createdAt": 1762000000025}, {"id": "memo26", "kind": "ride", "date": "2026-11-01", "horse": "エルメス", "count": 1, "memo": "", "createdAt": 1762000000026}, {"id": "memo27", "kind": "ride", "date": "2026-06-13", "horse": "レグルス", "count": 1, "memo": "", "createdAt": 1762000000027}, {"id": "memo28", "kind": "ride", "date": "2026-07-05", "horse": "FF", "count": 1, "memo": "", "createdAt": 1762000000028}];
+  const NATIVE = !!(window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.save);
+  function persist(){
+    if(NATIVE){ try{ window.webkit.messageHandlers.save.postMessage(JSON.stringify(state.rides)); }catch(e){ toast('保存できませんでした。'); } return; }
+    try{ localStorage.setItem(LKEY, JSON.stringify(state.rides)); }catch(e){ toast('保存できませんでした。'); }
+  }
   function useLocal(){
     state.mode = 'local';
-    try{ state.rides = JSON.parse(localStorage.getItem(LKEY) || '[]'); }catch(e){ state.rides = []; }
-    const save = () => { try{ localStorage.setItem(LKEY, JSON.stringify(state.rides)); }catch(e){ toast('このブラウザに保存できませんでした。'); } };
+    let first = false;
+    if(NATIVE){
+      if(Array.isArray(window.NATIVE_RIDES)) state.rides = window.NATIVE_RIDES;
+      else { state.rides = SEED.slice(); first = true; }
+    } else {
+      try{
+        const raw = localStorage.getItem(LKEY);
+        if(raw === null){ state.rides = SEED.slice(); first = true; } else state.rides = JSON.parse(raw);
+      }catch(e){ state.rides = []; }
+    }
+    if(first) persist();
     backend = {
-      async put(r){ const i = state.rides.findIndex(x => x.id === r.id); if(i >= 0) state.rides[i] = r; else state.rides.push(r); save(); render(); },
-      async remove(id){ state.rides = state.rides.filter(x => x.id !== id); save(); render(); }
+      async put(r){ const i = state.rides.findIndex(x => x.id === r.id); if(i >= 0) state.rides[i] = r; else state.rides.push(r); persist(); render(); },
+      async remove(id){ state.rides = state.rides.filter(x => x.id !== id); persist(); render(); }
     };
     render();
   }
 
-  function init(){
-    try{ if(navigator.storage && navigator.storage.persist) navigator.storage.persist(); }catch(e){}
-    useLocal();
-  }
+  function init(){ useLocal(); }
 
   async function putRide(r){
     if(!backend){ toast('まだ読み込み中です。少し待ってからもう一度押してください。'); return false; }
@@ -391,7 +395,7 @@ footer.note{ margin-top:32px; color:var(--muted); font-size:.8rem; }
     renderMatrix(phs, pr);
 
     $('#storageNote').textContent =
-      state.mode === 'local' ? '記録はこの端末の中にだけ保存されます。機種変更やアプリの削除に備えて、ときどき「CSVで保存」でバックアップしてください。' : '';
+      state.mode === 'local' ? '記録はこのiPhoneの中に保存されます。アプリを削除すると記録も消えるので、ときどき「CSVで保存」でバックアップしてください。' : '';
   }
 
   function renderLog(){
@@ -616,6 +620,9 @@ footer.note{ margin-top:32px; color:var(--muted); font-size:.8rem; }
     const csv = '\ufeff' + rows.map(row => row.map(c => { c = String(c); return /[",\r\n]/.test(c) ? '"' + c.replace(/"/g,'""') + '"' : c; }).join(',')).join('\r\n');
     const d = new Date();
     const name = `騎乗記録_${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}.csv`;
+    if(window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.share){
+      window.webkit.messageHandlers.share.postMessage({ filename:name, text:csv }); return;
+    }
     const blob = new Blob([csv], { type:'text/csv;charset=utf-8' });
     try{
       const file = new File([blob], name, { type:'text/csv' });
@@ -633,7 +640,6 @@ footer.note{ margin-top:32px; color:var(--muted); font-size:.8rem; }
     $('#parseBtn').click();
   });
 
-  if('serviceWorker' in navigator){ window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {})); }
 
   init();
 })();
